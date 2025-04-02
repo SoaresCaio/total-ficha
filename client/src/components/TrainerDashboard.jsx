@@ -11,6 +11,7 @@ function TrainerDashboard() {
   const [workouts, setWorkouts] = useState(null);
   const [selectedWorkout, setSelectedWorkout] = useState("");
 
+  // GIF options truncated for brevity; use your full array:
   const availableGifs = [
     { value: "", label: "None" },
     { value: "abdutora.gif", label: "Abdutora" },
@@ -72,15 +73,16 @@ function TrainerDashboard() {
     { value: "tricepstestacabo.gif", label: "Triceps Testa Cabo" },
   ];
 
+  // ------------------ PASSCODE AUTH ------------------
   const handlePasscodeSubmit = () => {
     if (passcode === "trainer123") setAuthenticated(true);
     else alert("Wrong passcode!");
   };
-
   const handlePasscodeKeyPress = (e) => {
     if (e.key === "Enter") handlePasscodeSubmit();
   };
 
+  // ------------------ FETCH WORKOUTS ------------------
   const handleFetchWorkouts = async () => {
     if (!code) {
       alert("Please enter a client code!");
@@ -88,7 +90,7 @@ function TrainerDashboard() {
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/api/workouts/${code.toLowerCase()}` // Normalize code for fetch
+        `http://localhost:5000/api/workouts/${code.toLowerCase()}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -107,16 +109,12 @@ function TrainerDashboard() {
     }
   };
 
+  // ------------------ DELETE WORKOUT ------------------
   const handleDeleteWorkout = async (workoutNameToDelete) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${workoutNameToDelete}"?`
-      )
-    )
-      return;
+    if (!window.confirm(`Delete "${workoutNameToDelete}"?`)) return;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/workouts/${code.toLowerCase()}/${workoutNameToDelete}`, // Normalize code for deletion
+        `http://localhost:5000/api/workouts/${code.toLowerCase()}/${workoutNameToDelete}`,
         { method: "DELETE" }
       );
       const data = await response.json();
@@ -129,16 +127,18 @@ function TrainerDashboard() {
     }
   };
 
-  const handleSelectWorkout = (workoutName) => {
-    setSelectedWorkout(workoutName);
-    setWorkoutName(workoutName);
+  // ------------------ SELECT WORKOUT ------------------
+  const handleSelectWorkout = (wName) => {
+    setSelectedWorkout(wName);
+    setWorkoutName(wName);
     setExercises(
-      workouts[workoutName].exercises || [
+      workouts[wName]?.exercises || [
         { name: "", sets: "", reps: "", notes: "", demoGif: "" },
       ]
     );
   };
 
+  // ------------------ EXERCISES ADD/REMOVE ------------------
   const handleAddExercise = () => {
     setExercises([
       ...exercises,
@@ -146,6 +146,13 @@ function TrainerDashboard() {
     ]);
   };
 
+  const handleRemoveExercise = (index) => {
+    const newExercises = [...exercises];
+    newExercises.splice(index, 1);
+    setExercises(newExercises);
+  };
+
+  // ------------------ SAVE WORKOUT ------------------
   const handleSubmit = async () => {
     if (!workoutName) {
       alert("Please enter a workout name!");
@@ -159,7 +166,7 @@ function TrainerDashboard() {
           code: code.toLowerCase(),
           workoutName,
           exercises,
-        }), // Normalize code before sending
+        }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -171,7 +178,7 @@ function TrainerDashboard() {
         setSelectedWorkout("");
         handleFetchWorkouts();
       } else {
-        alert(data.error); // Display error if code already exists
+        alert(data.error);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -179,6 +186,7 @@ function TrainerDashboard() {
     }
   };
 
+  // ------------------ RENDER ------------------
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex justify-center items-center p-4 sm:p-6">
@@ -210,6 +218,8 @@ function TrainerDashboard() {
         <h1 className="text-3xl font-bold mb-6 text-[#f68635]">
           Trainer Dashboard
         </h1>
+
+        {/* Client Code Input */}
         <div className="flex flex-col sm:flex-row mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
           <label className="mr-4 self-center">Client Code:</label>
           <input
@@ -226,6 +236,8 @@ function TrainerDashboard() {
             View Workouts
           </button>
         </div>
+
+        {/* Existing Workouts */}
         {workouts && (
           <div className="mb-6">
             <h2 className="text-2xl font-semibold mb-2 text-[#f68635]">
@@ -239,23 +251,24 @@ function TrainerDashboard() {
               <option value="">Select a workout to edit</option>
               {Object.keys(workouts)
                 .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-                .map((workoutName) => (
-                  <option key={workoutName} value={workoutName}>
-                    {workoutName}
+                .map((wName) => (
+                  <option key={wName} value={wName}>
+                    {wName}
                   </option>
                 ))}
             </select>
+
             <ul className="space-y-2 max-h-48 overflow-y-auto">
               {Object.keys(workouts)
                 .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-                .map((workoutName) => (
+                .map((wName) => (
                   <li
-                    key={workoutName}
+                    key={wName}
                     className="flex justify-between items-center p-2 bg-gray-800 rounded-lg"
                   >
-                    <span>{workoutName}</span>
+                    <span>{wName}</span>
                     <button
-                      onClick={() => handleDeleteWorkout(workoutName)}
+                      onClick={() => handleDeleteWorkout(wName)}
                       className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200"
                     >
                       Delete
@@ -265,6 +278,8 @@ function TrainerDashboard() {
             </ul>
           </div>
         )}
+
+        {/* Workout Name */}
         <div className="mb-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <label className="mr-4">Workout Name:</label>
           <input
@@ -275,11 +290,15 @@ function TrainerDashboard() {
             className="p-3 w-full sm:w-64 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
           />
         </div>
+
+        {/* Exercises: Grid Layout */}
         {exercises.map((exercise, index) => (
           <div
             key={index}
-            className="mb-4 flex flex-col sm:flex-row sm:flex-wrap items-center space-y-4 sm:space-y-0 sm:space-x-4"
+            // 1 column on small screens, 6 columns on md+ screens
+            className="grid grid-cols-1 md:grid-cols-6 gap-2 mb-4"
           >
+            {/* Exercise Name */}
             <input
               type="text"
               placeholder="Exercise Name"
@@ -289,8 +308,10 @@ function TrainerDashboard() {
                 newExercises[index].name = e.target.value;
                 setExercises(newExercises);
               }}
-              className="p-2 w-full sm:w-32 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
+              className="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
             />
+
+            {/* Sets */}
             <input
               type="text"
               placeholder="Sets"
@@ -300,8 +321,10 @@ function TrainerDashboard() {
                 newExercises[index].sets = e.target.value;
                 setExercises(newExercises);
               }}
-              className="p-2 w-full sm:w-12 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
+              className="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
             />
+
+            {/* Reps */}
             <input
               type="text"
               placeholder="Reps"
@@ -311,8 +334,10 @@ function TrainerDashboard() {
                 newExercises[index].reps = e.target.value;
                 setExercises(newExercises);
               }}
-              className="p-2 w-full sm:w-12 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
+              className="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
             />
+
+            {/* Notes */}
             <input
               type="text"
               placeholder="Notes"
@@ -322,8 +347,10 @@ function TrainerDashboard() {
                 newExercises[index].notes = e.target.value;
                 setExercises(newExercises);
               }}
-              className="p-2 w-full sm:w-48 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
+              className="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
             />
+
+            {/* Demo Gif */}
             <select
               value={exercise.demoGif}
               onChange={(e) => {
@@ -331,7 +358,7 @@ function TrainerDashboard() {
                 newExercises[index].demoGif = e.target.value;
                 setExercises(newExercises);
               }}
-              className="p-2 w-full sm:w-32 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
+              className="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f68635]"
             >
               {availableGifs.map((gif) => (
                 <option key={gif.value} value={gif.value}>
@@ -339,8 +366,18 @@ function TrainerDashboard() {
                 </option>
               ))}
             </select>
+
+            {/* Remove Button */}
+            <button
+              onClick={() => handleRemoveExercise(index)}
+              className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200"
+            >
+              Remove
+            </button>
           </div>
         ))}
+
+        {/* Add Exercise / Save Workout */}
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <button
             onClick={handleAddExercise}

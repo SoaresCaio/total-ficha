@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
+const serverless = require("serverless-http");
+
 const app = express();
-const port = 5000;
 
 // Enable CORS for the frontend
 app.use(cors({ origin: "http://localhost:5173" }));
@@ -33,7 +34,7 @@ async function testFirestore() {
 testFirestore();
 
 // POST endpoint to save workouts
-app.post("/api/workouts", async (req, res) => {
+app.post("/workouts", async (req, res) => {
   const { code, workoutName, exercises } = req.body;
   if (!code || !workoutName || !exercises) {
     return res
@@ -41,10 +42,7 @@ app.post("/api/workouts", async (req, res) => {
       .json({ error: "Missing code, workoutName, or exercises" });
   }
   try {
-    // Normalize the code to lowercase
     const normalizedCode = code.toLowerCase();
-
-    // Save the workout (creates new document or updates existing one)
     await db
       .collection("workouts")
       .doc(normalizedCode)
@@ -65,13 +63,13 @@ app.post("/api/workouts", async (req, res) => {
 });
 
 // GET endpoint to fetch all workouts for a code
-app.get("/api/workouts/:code", async (req, res) => {
+app.get("/workouts/:code", async (req, res) => {
   const { code } = req.params;
   if (!code) {
     return res.status(400).json({ error: "Missing code" });
   }
   try {
-    const normalizedCode = code.toLowerCase(); // Normalize code for lookup
+    const normalizedCode = code.toLowerCase();
     const doc = await db.collection("workouts").doc(normalizedCode).get();
     if (doc.exists) {
       const data = doc.data();
@@ -88,14 +86,13 @@ app.get("/api/workouts/:code", async (req, res) => {
 });
 
 // DELETE endpoint to remove a specific workout
-app.delete("/api/workouts/:code/:workoutName", async (req, res) => {
+app.delete("/workouts/:code/:workoutName", async (req, res) => {
   const { code, workoutName } = req.params;
   if (!code || !workoutName) {
     return res.status(400).json({ error: "Missing code or workoutName" });
   }
   try {
-    const normalizedCode = code.toLowerCase(); // Normalize code for deletion
-    // Use Firestore's update to remove the workoutName field from the workouts map
+    const normalizedCode = code.toLowerCase();
     await db
       .collection("workouts")
       .doc(normalizedCode)
@@ -110,5 +107,5 @@ app.delete("/api/workouts/:code/:workoutName", async (req, res) => {
   }
 });
 
-
-
+// Export the app wrapped with serverless-http
+module.exports.handler = serverless(app);

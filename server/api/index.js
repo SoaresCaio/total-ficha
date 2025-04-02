@@ -6,7 +6,7 @@ const serverless = require("serverless-http");
 const app = express();
 
 // Enable CORS for the frontend
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: "https://total-ficha.vercel.app" }));
 app.use(express.json());
 
 // Initialize Firebase Admin

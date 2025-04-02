@@ -7,7 +7,7 @@ function ClientWorkout() {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`https://total-ficha.vercel.app/api/workouts/${code}`);
+      const response = await fetch(`https://server-tf.vercel.app/api/workouts/${code}`);
       const data = await response.json();
       if (response.ok) {
         setWorkouts(data.workouts);

@@ -110,7 +110,5 @@ app.delete("/api/workouts/:code/:workoutName", async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+
+
